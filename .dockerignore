@@ -1,0 +1,8 @@
+# Chasm should not ship these to version control
+.env
+export.json
+chasm/data/
+chasm/reports/
+__pycache__/
+*.pyc
+.pytest_cache/

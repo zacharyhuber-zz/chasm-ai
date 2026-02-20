@@ -1,0 +1,70 @@
+# Combined Codebase Refactoring Plan
+
+The main goal of this plan is to improve the modularity, maintainability, and testability of the Chasm AI Antigravity codebase without changing its external behavior. It combines structural insights from the codebase audit with architectural improvements.
+
+## User Review Required
+
+> [!NOTE]
+> Please review these proposed refactoring steps. They are focused on structural improvements and addressing technical debt. No functional changes will be made to the underlying logic.
+
+## Proposed Changes
+
+### 1. Dead Code Deletion (Quick Wins)
+The codebase has several redundant modules where one implementation superseded another.
+- **Goal:** Remove unused files to reduce cognitive load.
+- **Details:**
+  - Delete `chasm/graph/knowledge_graph.py` (superseded by `builder.py`).
+  - Delete `chasm/models/schemas.py` (superseded by `schema.py`).
+  - Delete `chasm/vector/embeddings.py` (superseded by `engine.py`).
+  - Delete `chasm/agents/orchestrator.py` (empty stub).
+  - Delete `chasm/ingest/readers.py` (unused legacy readers).
+
+### 2. Configuration and Path Management
+Currently, multiple files call `load_dotenv()` independently and use brittle path resolution logic (`Path(__file__).resolve().parents...`) to locate data directories.
+- **Goal:** Centralize configuration and paths using `pydantic-settings`.
+- **Details:** 
+  - Update `chasm/core/config.py` to use `BaseSettings`, loading `.env` once.
+  - Add `data_dir`, `reports_dir`, `project_root`, and all API keys (`GOOGLE_API_KEY`, `REDDIT_CLIENT_ID`, etc.) to the central config.
+  - Refactor all agent and pipeline files to import `settings` instead of resolving paths or calling `os.getenv` manually.
+
+### 3. Architecture & Modularity
+- **API Routing (FastAPI):** 
+  - *Problem:* `chasm/api/main.py` is growing rapidly and contains all HTTP endpoints.
+  - *Action:* Split routes into logical modules using FastAPI's `APIRouter` under a new `chasm/api/routes/` directory (e.g., `products.py`, `reports.py`, `onboarding.py`, `research.py`).
+- **Graph Persistence:**
+  - *Problem:* Graph loading/saving is tightly coupled to FastAPI lifespan events.
+  - *Action:* Move the logic that interacts with `export.json` into a dedicated `chasm/graph/persistence.py` module.
+- **Pipeline Modularity:**
+  - *Problem:* `run_weekly_research` is a monolithic 120-line procedural function lacking top-level error handling.
+  - *Action:* Break it down into a testable `WeeklyResearchPipeline` class with step-specific methods (`_discover_sources()`, `_scrape_sources()`, etc.) and add robust `try/except` and checkpoint saving.
+- **LLM Base Class:**
+  - *Problem:* Four agent classes have identical 10-line `__init__` boilerplate for the Gemini client.
+  - *Action:* Create a shared `GeminiAgent` base class in `chasm/core/llm.py` that handles API key loading and initialization.
+
+### 4. Test Architecture
+Integration testing blocks (e.g., `if __name__ == "__main__":`) are excellent for debugging but clutter production code and are difficult to run sequentially in a CI pipeline.
+- **Goal:** Standardize testing.
+- **Details:**
+  - Create a top-level `tests/` directory (e.g., `tests/integration/`).
+  - Move the inline test blocks from files like `builder.py`, `cataloger.py`, and `engine.py` into proper `pytest` files using `unittest.mock` to prevent live API calls.
+
+### 5. Bug Fixes & Edge Cases
+- **Component Deduplication:** Fix the pipeline issue where a new `Component` node is created for every single insight (instead of reusing existing component nodes like "Battery").
+- **API Model Reuse:** Reuse the Pydantic `Product` model directly in the API instead of maintaining a mirrored `ProductOut` model.
+- **Enum Serialization:** Use Pydantic's `model_dump(mode="json")` in the graph builder instead of brittle `hasattr(category, "value")` checks.
+
+### 6. Frontend Improvements
+- **Configuration:** Replace hardcoded `http://localhost:8000` references with environment variables (`import.meta.env.VITE_API_URL`).
+- **UX Prompts:** Extract manual prompt logic (e.g., `window.open(...)` from `App.tsx`) into proper UI modals or dedicated API calls.
+- **Styling Strategy:** Standardize the CSS. Either fully transition the heavy inline `style={{}}` objects to Tailwind utility classes, or extract the repeated patterns into `index.css`.
+
+## Verification Plan
+
+### Automated Tests
+- Run `pytest tests/` to execute the extracted integration tests and verify core logic.
+- Re-run `python main.py --schedule` locally to ensure the scheduler and pipeline module imports still function.
+- Re-run `uvicorn chasm.api.main:app` to ensure the modularized API routers start up without errors.
+
+### Manual Verification
+- Deploy the frontend locally using `npm run dev` and navigate to the dashboard to ensure it successfully loads and connects to the refactored endpoints.
+- Run a manual pipeline execution against a test product to confirm the `WeeklyResearchPipeline` class correctly builds and persists the graph.

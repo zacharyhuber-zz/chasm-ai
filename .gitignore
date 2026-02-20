@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data & output
+chasm/data/raw/
+chasm/reports/
+export.json
+output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (chasm-ui)
+chasm-ui/node_modules/
+chasm-ui/dist/
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Models cache
+*.bin
+*.onnx
