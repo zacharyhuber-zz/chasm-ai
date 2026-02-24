@@ -19,12 +19,6 @@ interface AlignmentMatrixProps {
     productName: string;
 }
 
-const QUADRANT_COLORS = {
-    blindSpot: 'rgba(244, 63, 94, 0.08)',
-    overEngineered: 'rgba(245, 158, 11, 0.08)',
-    aligned: 'rgba(16, 185, 129, 0.08)',
-    atRisk: 'rgba(139, 92, 246, 0.08)',
-};
 
 function getDotColor(item: ComponentSentiment): string {
     const x = item.internalSentiment;

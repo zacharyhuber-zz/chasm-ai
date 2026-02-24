@@ -118,7 +118,7 @@ export default function GalaxyMap({ graphData }: GalaxyMapProps) {
     );
 
     // Hover handler for tooltip
-    const handleNodeHover = useCallback((node: any, prevNode: any) => {
+    const handleNodeHover = useCallback((node: any, _prevNode: any) => {
         if (node && node.node_type === 'Insight' && node.summary) {
             setHoverNode(node);
         } else {
