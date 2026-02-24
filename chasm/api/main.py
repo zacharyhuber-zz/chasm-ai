@@ -50,9 +50,14 @@ _DEFAULT_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
 ]
-_extra = settings.cors_origins
+
+# Read CORS_ORIGINS from settings (pydantic-settings) or fall back to os.environ
+import os
+_extra = settings.cors_origins or os.environ.get("CORS_ORIGINS", "")
 if _extra:
     _DEFAULT_ORIGINS.extend(o.strip() for o in _extra.split(",") if o.strip())
+
+logger.info("CORS allowed origins: %s", _DEFAULT_ORIGINS)
 
 app.add_middleware(
     CORSMiddleware,
