@@ -6,8 +6,11 @@ import {
     Radio,
     Zap,
     Plus,
+    UserRoundSearch,
+    Copy,
+    Check,
 } from 'lucide-react';
-import type { ProductNode } from '../api';
+import { createInterviewSession, type ProductNode } from '../api';
 
 interface SidebarProps {
     products: ProductNode[];
@@ -176,6 +179,9 @@ export default function Sidebar({
                     <Plus size={16} />
                     {!collapsed && <span style={{ fontSize: 13 }}>Onboard Company</span>}
                 </div>
+
+                {/* Interview link button */}
+                <InterviewLinkButton collapsed={collapsed} />
             </nav>
 
             {/* Status footer */}
@@ -193,5 +199,63 @@ export default function Sidebar({
                 </div>
             </div>
         </aside>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Interview Link Button (sub-component)
+// ---------------------------------------------------------------------------
+
+function InterviewLinkButton({ collapsed }: { collapsed: boolean }) {
+    const [copied, setCopied] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleClick = async () => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            const session = await createInterviewSession();
+            const url = `${window.location.origin}${window.location.pathname}#/interview/${session.session_id}`;
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+        } catch {
+            alert('Failed to create interview session. Is the backend running?');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div
+            onClick={handleClick}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 12px',
+                borderRadius: 10,
+                cursor: loading ? 'wait' : 'pointer',
+                marginTop: 4,
+                background: copied
+                    ? 'rgba(16, 185, 129, 0.12)'
+                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08))',
+                border: copied
+                    ? '1px solid rgba(16, 185, 129, 0.4)'
+                    : '1px solid rgba(59, 130, 246, 0.25)',
+                color: copied ? '#10b981' : '#94a3b8',
+                transition: 'all 0.3s ease',
+            }}
+        >
+            {copied ? <Check size={16} /> : <UserRoundSearch size={16} />}
+            {!collapsed && (
+                <span style={{ fontSize: 13, fontWeight: 500 }}>
+                    {copied ? 'Link Copied!' : 'Generate Interview Link'}
+                </span>
+            )}
+            {!collapsed && !copied && (
+                <Copy size={12} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+            )}
+        </div>
     );
 }

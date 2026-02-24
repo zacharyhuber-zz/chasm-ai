@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import AlignmentMatrix from './components/AlignmentMatrix';
 import GalaxyMap from './components/GalaxyMap';
 import StatsBar from './components/StatsBar';
+import Interview from './components/Interview';
 import {
   fetchProducts,
   fetchGraph,
@@ -15,7 +16,29 @@ import {
 
 type ViewMode = 'matrix' | 'galaxy';
 
+function useHashRoute(): string {
+  const [hash, setHash] = useState(window.location.hash);
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+  return hash;
+}
+
 export default function App() {
+  const hash = useHashRoute();
+
+  // Check if we're on an interview route: #/interview/{sessionId}
+  const interviewMatch = hash.match(/^#\/interview\/(.+)$/);
+  if (interviewMatch) {
+    return <Interview sessionId={interviewMatch[1]} />;
+  }
+
+  return <Dashboard />;
+}
+
+function Dashboard() {
   const [products, setProducts] = useState<ProductNode[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductNode | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -258,3 +281,4 @@ export default function App() {
     </div>
   );
 }
+

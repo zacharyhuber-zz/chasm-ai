@@ -66,12 +66,13 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Register routers
 # ---------------------------------------------------------------------------
-from chasm.api.routes import onboarding, products, reports, research  # noqa: E402
+from chasm.api.routes import interviews, onboarding, products, reports, research  # noqa: E402
 
 app.include_router(products.router)
 app.include_router(reports.router)
 app.include_router(onboarding.router)
 app.include_router(research.router)
+app.include_router(interviews.router)
 
 
 # ---------------------------------------------------------------------------

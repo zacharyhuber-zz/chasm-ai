@@ -33,7 +33,7 @@ COPY main.py .
 COPY requirements.txt .
 
 # Create persistent data directories
-RUN mkdir -p chasm/data/raw chasm/reports
+RUN mkdir -p chasm/data/raw chasm/data/interviews chasm/reports
 
 # Pre-download the embedding model so cold starts are fast
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')" || true

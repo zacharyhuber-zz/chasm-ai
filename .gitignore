@@ -22,6 +22,7 @@ venv/
 
 # Data & output
 chasm/data/raw/
+chasm/data/interviews/
 chasm/reports/
 export.json
 output/

@@ -132,3 +132,63 @@ export function deriveComponentSentiments(graph: GraphData): ComponentSentiment[
         insightCount: data.internal.length + data.external.length,
     }));
 }
+
+// ---------------------------------------------------------------------------
+// Interview API
+// ---------------------------------------------------------------------------
+
+export interface InterviewSessionInfo {
+    session_id: string;
+    status: string;
+    interview_url: string;
+}
+
+export interface InterviewMessage {
+    role: string;
+    content: string;
+    timestamp?: string;
+}
+
+export interface InterviewDetail {
+    session_id: string;
+    status: string;
+    messages: InterviewMessage[];
+    created_at: string;
+    completed_at?: string;
+}
+
+export interface InterviewResponse {
+    role: string;
+    content: string;
+    is_complete: boolean;
+}
+
+export async function createInterviewSession(): Promise<InterviewSessionInfo> {
+    const res = await axios.post<InterviewSessionInfo>(`${API_BASE}/api/interviews`);
+    return res.data;
+}
+
+export async function getInterviewSession(sessionId: string): Promise<InterviewDetail> {
+    const res = await axios.get<InterviewDetail>(`${API_BASE}/api/interviews/${sessionId}`);
+    return res.data;
+}
+
+export async function sendInterviewMessage(
+    sessionId: string,
+    message: string,
+): Promise<InterviewResponse> {
+    const res = await axios.post<InterviewResponse>(
+        `${API_BASE}/api/interviews/${sessionId}/message`,
+        { message },
+    );
+    return res.data;
+}
+
+export async function completeInterview(
+    sessionId: string,
+): Promise<{ status: string; insights_extracted: number }> {
+    const res = await axios.post<{ status: string; insights_extracted: number }>(
+        `${API_BASE}/api/interviews/${sessionId}/complete`,
+    );
+    return res.data;
+}
