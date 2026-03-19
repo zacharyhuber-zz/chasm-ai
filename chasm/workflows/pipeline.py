@@ -107,8 +107,8 @@ def run_weekly_research(graph: ChasmGraph) -> None:
         # ---- Step 4: Inject into graph ----
         logger.info("[Graph] Adding %d (Component, Insight) pairs …", len(results))
         for component, insight, source_url in results:
-            # Add the component (linked to the product)
-            graph.add_component(component, product_id=product_id)
+            # Add the component (deduplicates by name under this product)
+            comp_id = graph.add_component(component, product_id=product_id)
 
             # Create a Source node for the URL
             source = Source(
@@ -123,7 +123,7 @@ def run_weekly_research(graph: ChasmGraph) -> None:
             graph.add_insight(
                 insight=insight,
                 source_id=source.id,
-                target_id=component.id,
+                target_id=comp_id,
             )
 
         logger.info(
@@ -150,6 +150,39 @@ def run_weekly_research(graph: ChasmGraph) -> None:
     matches = vector_engine.link_semantic_matches(graph.graph)
     logger.info("Semantic linking added %d SEMANTIC_MATCH edge(s).", matches)
 
+    # ---- Step 6: Generate opportunities & personas ----
+    logger.info("=" * 40)
+    logger.info("[OpportunityGenerator] Synthesising opportunities & personas …")
+
+    from chasm.agents.synthesizer import OpportunityGenerator
+
+    opp_gen = OpportunityGenerator()
+
+    for product_id, product_data in product_nodes:
+        product_name = product_data.get("name", product_id)
+
+        # Clear stale opportunities and personas before regenerating
+        _clear_nodes(graph, product_id, "HAS_OPPORTUNITY", "Opportunity")
+        _clear_nodes(graph, product_id, "HAS_PERSONA", "Persona")
+
+        try:
+            opportunities = opp_gen.generate_opportunities(graph, product_id, product_name)
+            for opp in opportunities:
+                graph.add_opportunity(opp)
+
+            personas = opp_gen.generate_personas(graph, product_id, product_name, opportunities)
+            for persona in personas:
+                graph.add_persona(persona)
+
+            logger.info(
+                "Product '%s': %d opportunities, %d personas.",
+                product_name,
+                len(opportunities),
+                len(personas),
+            )
+        except Exception as exc:
+            logger.warning("Opportunity generation failed for '%s': %s", product_name, exc)
+
     # ---- Done ----
     logger.info("=" * 60)
     logger.info("  Weekly Research Pipeline Complete.")
@@ -158,3 +191,15 @@ def run_weekly_research(graph: ChasmGraph) -> None:
 
     print(f"\n✓ Weekly Research Pipeline Complete.")
     print(f"  Graph: {graph.node_count} nodes, {graph.edge_count} edges\n")
+
+
+def _clear_nodes(graph: ChasmGraph, product_id: str, relation: str, node_type: str):
+    """Remove all nodes of a given type linked to a product."""
+    to_remove: list[str] = []
+    for _, target, data in graph.graph.out_edges(product_id, data=True):
+        if data.get("relation") == relation:
+            node = graph.graph.nodes.get(target, {})
+            if node.get("node_type") == node_type:
+                to_remove.append(target)
+    for nid in to_remove:
+        graph.graph.remove_node(nid)

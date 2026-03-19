@@ -20,9 +20,10 @@ const NODE_SIZES: Record<string, number> = {
 
 interface GalaxyMapProps {
     graphData: GraphData | null;
+    compact?: boolean;
 }
 
-export default function GalaxyMap({ graphData }: GalaxyMapProps) {
+export default function GalaxyMap({ graphData, compact = false }: GalaxyMapProps) {
     const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
     const containerRef = useRef<HTMLDivElement>(null);
     const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
@@ -37,7 +38,7 @@ export default function GalaxyMap({ graphData }: GalaxyMapProps) {
             if (containerRef.current) {
                 setDimensions({
                     width: containerRef.current.offsetWidth,
-                    height: Math.max(520, window.innerHeight - 260),
+                    height: compact ? 320 : Math.max(520, window.innerHeight - 260),
                 });
             }
         };
@@ -139,46 +140,50 @@ export default function GalaxyMap({ graphData }: GalaxyMapProps) {
     }, []);
 
     return (
-        <div className="glass-card fade-in" style={{ padding: '28px 24px', overflow: 'hidden' }}>
+        <div className={compact ? '' : 'glass-card fade-in'} style={{ padding: compact ? 0 : '28px 24px', overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                <Orbit size={22} color="#3b82f6" />
-                <h2 style={{ fontSize: 20, fontWeight: 700 }}>Galaxy Map</h2>
-            </div>
-            <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>
-                Knowledge Graph — interactive force-directed layout
-                {(!graphData || graphData.nodes.length === 0) && (
-                    <span style={{ color: '#f59e0b', marginLeft: 8 }}>(demo data)</span>
-                )}
-            </p>
-
-            {/* Legend */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-                {Object.entries(NODE_COLORS).map(([type, color]) => (
-                    <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div
-                            style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: '50%',
-                                background: color,
-                                boxShadow: `0 0 6px ${color}60`,
-                            }}
-                        />
-                        <span style={{ fontSize: 12, color: '#94a3b8' }}>{type}</span>
+            {!compact && (
+                <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                        <Orbit size={22} color="#3b82f6" />
+                        <h2 style={{ fontSize: 20, fontWeight: 700 }}>Galaxy Map</h2>
                     </div>
-                ))}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div
-                        style={{
-                            width: 20,
-                            height: 0,
-                            borderTop: '2px dashed #f59e0b',
-                        }}
-                    />
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>Semantic Match</span>
-                </div>
-            </div>
+                    <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>
+                        Knowledge Graph — interactive force-directed layout
+                        {(!graphData || graphData.nodes.length === 0) && (
+                            <span style={{ color: '#f59e0b', marginLeft: 8 }}>(demo data)</span>
+                        )}
+                    </p>
+
+                    {/* Legend */}
+                    <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
+                        {Object.entries(NODE_COLORS).map(([type, color]) => (
+                            <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div
+                                    style={{
+                                        width: 10,
+                                        height: 10,
+                                        borderRadius: '50%',
+                                        background: color,
+                                        boxShadow: `0 0 6px ${color}60`,
+                                    }}
+                                />
+                                <span style={{ fontSize: 12, color: '#94a3b8' }}>{type}</span>
+                            </div>
+                        ))}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div
+                                style={{
+                                    width: 20,
+                                    height: 0,
+                                    borderTop: '2px dashed #f59e0b',
+                                }}
+                            />
+                            <span style={{ fontSize: 12, color: '#94a3b8' }}>Semantic Match</span>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Graph container */}
             <div
@@ -302,9 +307,11 @@ export default function GalaxyMap({ graphData }: GalaxyMapProps) {
                 )}
             </div>
 
-            <p style={{ color: '#475569', fontSize: 11, marginTop: 10, textAlign: 'center' }}>
-                Click a node to focus · Click background to reset · Scroll to zoom
-            </p>
+            {!compact && (
+                <p style={{ color: '#475569', fontSize: 11, marginTop: 10, textAlign: 'center' }}>
+                    Click a node to focus · Click background to reset · Scroll to zoom
+                </p>
+            )}
         </div>
     );
 }
