@@ -134,6 +134,60 @@ export function deriveComponentSentiments(graph: GraphData): ComponentSentiment[
 }
 
 // ---------------------------------------------------------------------------
+// Opportunity Engine API
+// ---------------------------------------------------------------------------
+
+export interface Opportunity {
+    id: string;
+    title: string;
+    opportunity_type: 'Unmet Need' | 'Friction Point' | 'Revenue Risk' | 'Feature Request';
+    severity: 'High' | 'Medium' | 'Low';
+    summary: string;
+    persona_tags: string[];
+    evidence_node_ids: string[];
+    product_id: string;
+    created_at: string;
+}
+
+export interface JobToBeDone {
+    title: string;
+    status: 'underserved' | 'partially_met' | 'well_served';
+    evidence_node_ids: string[];
+}
+
+export interface Persona {
+    id: string;
+    name: string;
+    description: string;
+    jobs_to_be_done: JobToBeDone[];
+    product_id: string;
+}
+
+export async function fetchOpportunities(productId: string): Promise<Opportunity[]> {
+    const res = await axios.get<Opportunity[]>(`${API_BASE}/api/opportunities/${productId}`);
+    return res.data;
+}
+
+export async function generateOpportunities(productId: string): Promise<{ status: string }> {
+    const res = await axios.post<{ status: string }>(
+        `${API_BASE}/api/opportunities/${productId}/generate`,
+    );
+    return res.data;
+}
+
+export async function fetchPersonas(productId: string): Promise<Persona[]> {
+    const res = await axios.get<Persona[]>(`${API_BASE}/api/personas/${productId}`);
+    return res.data;
+}
+
+export async function fetchSubgraph(nodeIds: string[]): Promise<GraphData> {
+    const res = await axios.get<GraphData>(`${API_BASE}/api/graph/subgraph`, {
+        params: { node_ids: nodeIds.join(',') },
+    });
+    return res.data;
+}
+
+// ---------------------------------------------------------------------------
 // Interview API
 // ---------------------------------------------------------------------------
 

@@ -1,18 +1,18 @@
-import { Activity, Box, GitBranch, Lightbulb } from 'lucide-react';
+import { Box, Zap, AlertTriangle, Lightbulb } from 'lucide-react';
 
 interface StatsBarProps {
-    nodeCount: number;
-    edgeCount: number;
     productCount: number;
+    opportunityCount: number;
+    highSeverityCount: number;
     insightCount: number;
 }
 
-export default function StatsBar({ nodeCount, edgeCount, productCount, insightCount }: StatsBarProps) {
+export default function StatsBar({ productCount, opportunityCount, highSeverityCount, insightCount }: StatsBarProps) {
     const stats = [
         { label: 'Products', value: productCount, icon: Box, color: '#3b82f6' },
+        { label: 'Opportunities', value: opportunityCount, icon: Zap, color: '#8b5cf6' },
+        { label: 'High Severity', value: highSeverityCount, icon: AlertTriangle, color: '#f43f5e' },
         { label: 'Insights', value: insightCount, icon: Lightbulb, color: '#f59e0b' },
-        { label: 'Nodes', value: nodeCount, icon: Activity, color: '#10b981' },
-        { label: 'Edges', value: edgeCount, icon: GitBranch, color: '#8b5cf6' },
     ];
 
     return (

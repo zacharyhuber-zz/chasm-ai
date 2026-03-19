@@ -156,7 +156,7 @@ def complete_session(session: InterviewSession) -> int:
                 target_product_id = pid
                 break
 
-        graph.add_component(component, product_id=target_product_id)
+        comp_id = graph.add_component(component, product_id=target_product_id)
 
         source = Source(
             id=f"src-interview-{insight.id}",
@@ -168,7 +168,7 @@ def complete_session(session: InterviewSession) -> int:
         graph.add_insight(
             insight=insight,
             source_id=source.id,
-            target_id=component.id,
+            target_id=comp_id,
         )
         injected += 1
 
